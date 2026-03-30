@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .login-box {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 300px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .badge{
+        padding:4px 8px;
+        border-radius: 6px;
+        color:white;
+        font-size: 12px;
+        }
+        .analyzed {
+            background-color: green;
+        }
+        .pending {
+            background-color: orange;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #4facfe;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="login-box">
+    <h2>Login</h2>
+
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+
+    <button onclick="login()">Login</button>
+
+    <p id="error" style="color:red;"></p>
+</div>
+
+<script>
+
+    async function login() {
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+
+    const response = await fetch("/login", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ username, password })
+    });
+
+    const result = await response.text();
+
+    if(result === "success") {
+        localStorage.setItem("loggedIn", "true"); // ✅ save login
+        window.location.href = "upload.html";
+    } else {
+        document.getElementById("error").innerText = "Invalid login!";
+    }
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,251 @@
+[12:23 am, 31/03/2026] Esh: <script>
+
+    // Upload + Display Result
+    document.getElementById("uploadForm").addEventListener("submit", async function(e) {
+        e.preventDefault();
+
+        const file = document.getElementById("fileInput").files[0];
+
+        if (!file) {
+            alert("Please select a file!");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const response = await fetch("/document/upload", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+
+            document.getElementById("result").innerHTML = `
+                <h3>Analysis Result</h3>
+                <p><b>File:</b> ${data.fileName}</p>
+                <p><b>Word Count:</b> ${data.wordCount}</p>
+                <p><b>Agreement:</b> ${data.agreement}</p>
+                <p><b>Clause:</b> ${data.clause}</p>
+                <p><b>Penalty:</b> ${data.penalty}</p>
+
+                <p><b>Summary:</b><br>${data.summary}</p>
+
+                <button onclick="readSummary('${data.summary.replace(/'/g, "\\'")}')">
+                    Read Summary
+                </button>
+
+                <button onclick="stopReading()">
+                    Stop
+                </button>
+            `;
+
+        } catch (error) {
+            alert("Upload failed!");
+            console.error(error);
+        }
+    });
+
+
+    // 🔊 FIXED VOICE FUNCTION
+    function readSummary(text) {
+
+        console.log("Reading:", text); // Debug check
+
+        if (!window.speechSynthesis) {
+            alert("Speech not supported!");
+            return;
+        }
+
+        // stop previous
+        window.speechSynthesis.cancel();
+
+        const speech = new SpeechSynthesisUtterance(text);
+
+        speech.lang = "en-US";
+        speech.rate = 1;
+
+        // IMPORTANT FIX (Chrome voice loading)
+        const voices = speechSynthesis.getVoices();
+        if (voices.length > 0) {
+            speech.voice = voices[0];
+        }
+
+        speechSynthesis.speak(speech);
+    }
+
+
+    // ⏹ STOP
+    function stopReading() {
+        speechSynthesis.cancel();
+    }
+
+</script>
+[12:29 am, 31/03/2026] Esh: <!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Legal Document Analyzer</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f6f9;
+            margin: 0;
+        }
+
+        .navbar {
+            background: #2c7be5;
+            color: white;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            margin-top: 50px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            width: 350px;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            background: #2c7be5;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1a5fd1;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div>Legal Document System</div>
+    <div>
+        <button onclick="logout()">Logout</button>
+    </div>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+    <div class="card">
+
+        <h2>Upload Legal Document</h2>
+
+        <form id="uploadForm">
+            <input type="file" id="fileInput" name="file"><br><br>
+            <button type="submit">Upload & Analyze</button>
+        </form>
+
+        <div id="result"></div>
+
+    </div>
+</div>
+
+<script>
+
+    function logout() {
+    localStorage.removeItem("loggedIn");
+    window.location.href = "index.html";
+}
+
+
+// 🔹 GLOBAL SUMMARY (IMPORTANT FIX)
+let currentSummary = "";
+
+
+// 📤 Upload + Show Result
+document.getElementById("uploadForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const file = document.getElementById("fileInput").files[0];
+
+    if (!file) {
+        alert("Please select a file!");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+        const response = await fetch("/document/upload", {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await response.json();
+
+        // STORE SUMMARY HERE
+        currentSummary = data.summary;
+
+        document.getElementById("result").innerHTML = `
+            <h3>Analysis Result</h3>
+            <p><b>File:</b> ${data.fileName}</p>
+            <p><b>Word Count:</b> ${data.wordCount}</p>
+            <p><b>Agreement:</b> ${data.agreement}</p>
+            <p><b>Clause:</b> ${data.clause}</p>
+            <p><b>Penalty:</b> ${data.penalty}</p>
+
+            <p><b>Summary:</b><br>${data.summary}</p>
+
+            <button onclick="readSummary()">Read Summary</button>
+            <button onclick="stopReading()">Stop</button>
+        `;
+
+    } catch (error) {
+        alert("Upload failed!");
+        console.error(error);
+    }
+});
+
+
+// 🔊 READ SUMMARY (FINAL WORKING)
+function readSummary() {
+
+    console.log("Clicked");
+
+    if (!currentSummary) {
+        alert("No summary available!");
+        return;
+    }
+
+    // stop previous
+    speechSynthesis.cancel();
+
+    const speech = new SpeechSynthesisUtterance(currentSummary);
+    speech.lang = "en-US";
+    speech.rate = 1;
+
+    speechSynthesis.speak(speech);
+}
+
+
+// ⏹ STOP
+function stopReading() {
+    speechSynthesis.cancel();
+}
+
+
+</script>
+
+</body>
+</html>
